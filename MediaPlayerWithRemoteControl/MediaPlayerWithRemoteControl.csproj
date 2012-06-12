@@ -72,6 +72,7 @@
     <Compile Include="PlayerState.cs" />
     <Compile Include="RemoteControl.cs" />
     <Compile Include="RemoteControlHost.cs" />
+    <Compile Include="UriToCachedImageConverter.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

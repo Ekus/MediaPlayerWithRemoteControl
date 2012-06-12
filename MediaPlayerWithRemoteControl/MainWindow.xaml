@@ -1,59 +1,47 @@
-﻿<Window x:Class="MediaPlayerWithRemoteControl.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="600" Width="1024" Loaded="Window_Loaded" Closing="Window_Closing">
+﻿<Window x:Class="MediaPlayerWithRemoteControl.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="clr-namespace:MediaPlayerWithRemoteControl" Height="600" Width="1024" Closing="Window_Closing" Loaded="Window_Loaded" Title="MainWindow">
     <Window.Resources>
+        <local:UriToCachedImageConverter x:Key="uriToImageConv" />
         <DataTemplate x:Key="AlbumTemplate">
             <Grid Height="90">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
-                <Image Source="{Binding Image}"
-                        Grid.Column="0"
-                        Margin="3"
-                        Width="90"
-                        Height="90"
-                        Stretch="UniformToFill" VerticalAlignment="Top"/>
-                <TextBlock Text="{Binding Title}"
-							FontFamily="Segoe UI"
-                            FontSize="32"
-                            Margin="3"
-                            Grid.Column="1"
-                            TextWrapping="Wrap"
-                />
+                <Image Grid.Column="0" Height="90" Margin="3" Width="90" Source="{Binding Image,  Converter={StaticResource uriToImageConv}}" Stretch="UniformToFill" VerticalAlignment="Top" />
+                <TextBlock Grid.Column="1" Margin="3" FontFamily="Segoe UI" FontSize="32" Text="{Binding Title}" TextWrapping="Wrap" />
                 <!--TextOptions.TextHintingMode="Animated"-->
             </Grid>
         </DataTemplate>
-        
+
         <DataTemplate x:Key="SongTemplate">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="{Binding Title}"
-							FontFamily="Segoe UI" 
-                            FontSize="12"
-                            Margin="3"
-                            Grid.Column="1"
-                            TextWrapping="Wrap"
-                />
+                <TextBlock Grid.Column="1" Margin="3" FontFamily="Segoe UI" FontSize="12" Text="{Binding Title}" TextWrapping="Wrap" />
                 <!--TextOptions.TextHintingMode="Animated"-->
             </Grid>
-        </DataTemplate>        
+        </DataTemplate>
     </Window.Resources>
-    <Grid>
+    <Grid x:Name="mainGrid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="6*" />
             <ColumnDefinition Width="6*" />
             <ColumnDefinition Width="6*" />
         </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="60" />
+            <RowDefinition Height="4*" />
+        </Grid.RowDefinitions>
 
-        <ListBox Grid.Column="0" x:Name="lstAlbums" ItemTemplate="{StaticResource AlbumTemplate}" />
-        <ListBox Grid.Column="1"  x:Name="lstSongs" Grid.Row="3" ItemTemplate="{StaticResource SongTemplate}" ItemsSource="{Binding ElementName=lstAlbums, Path=SelectedItem.Songs}"/>
+        <Button x:Name="btnEnqueueAlbums" Click="btnEnqueueAlbums_Click" Content="Enqueue Album(s)" />
+        <Button x:Name="btnEnqueueSongs" Grid.Column="1" Click="btnEnqueueSongs_Click" Content="Enqueue Song(s)" />
 
-            <Grid Grid.Column="2">
+        <ListBox x:Name="lstAlbums" Grid.Column="0" Grid.Row="1" ItemsSource="{Binding Albums}" ItemTemplate="{StaticResource AlbumTemplate}" MouseDoubleClick="lstAlbums_MouseDoubleClick" SelectionMode="Extended" />
+        <ListBox x:Name="lstSongs" Grid.Column="1" Grid.Row="1" ItemsSource="{Binding ElementName=lstAlbums, Path=SelectedItem.Songs}" ItemTemplate="{StaticResource SongTemplate}" MouseDoubleClick="lstSongs_MouseDoubleClick" SelectionMode="Extended"/>
+
+        <Grid Grid.Column="2" Grid.Row="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="60" />
                 <RowDefinition Height="4*" />
@@ -61,18 +49,9 @@
                 <RowDefinition Height="6*" />
             </Grid.RowDefinitions>
 
-            <TextBlock Text="{Binding ElementName=lstAlbums, Path=SelectedItem.Title}"
-							FontFamily="Segoe UI" Foreground="#FFDDDDDD" 
-                            FontSize="12"
-                            Margin="3"
-                            Grid.Column="1"
-                            TextWrapping="Wrap"
-                />
+            <TextBlock Grid.Column="1" Margin="3" FontFamily="Segoe UI" FontSize="12" Foreground="#FFDDDDDD" Text="{Binding Path=SelectedSong.Album.Title}" TextWrapping="Wrap" />
 
-            <Image Source="{Binding ElementName=lstAlbums, Path=SelectedItem.Image}"
-                        Grid.Row="1"
-                        Margin="3"
-                        Stretch="Uniform" VerticalAlignment="Top"/>
+            <Image Grid.Row="1" Margin="3" Source="{Binding Path=SelectedSong.Album.Image, Converter={StaticResource uriToImageConv}}" Stretch="Uniform" VerticalAlignment="Top" />
 
             <StackPanel Grid.Row="2">
 
@@ -82,27 +61,26 @@
      Width="450" Height="250" LoadedBehavior="Manual" UnloadedBehavior="Stop" Stretch="Fill"
                 MediaOpened="Element_MediaOpened MediaEnded="Element_MediaEnded"
                -->
-                <MediaElement x:Name="MediaPlayer" Grid.Row="2" Source="{Binding ElementName=lstSongs, Path=SelectedItem.FilePath}"  LoadedBehavior="Manual" MediaEnded="MediaPlayer_MediaEnded"
-                MediaOpened="Element_MediaOpened"/>
+                <MediaElement x:Name="MediaPlayer" Grid.Row="2" LoadedBehavior="Manual" MediaEnded="MediaPlayer_MediaEnded" MediaOpened="Element_MediaOpened" Source="{Binding Path=SelectedSong.FilePath}" />
 
                 <StackPanel Orientation="Horizontal">
-                    <Button x:Name="btnEnableService" Width="50" Margin="10" Click="btnEnableService_Click">Server</Button>
-                    <Button x:Name="btnPlay" Width="50" Margin="10" Click="btnPlay_Click">Play</Button>
-                    <Button x:Name="btnPause" Width="50" Margin="10" Click="btnPause_Click">Pause</Button>
+                    <Button x:Name="btnEnableService" Margin="10" Width="50" Click="btnEnableService_Click">Server</Button>
+                    <Button x:Name="btnPlay" Margin="10" Width="50" Click="btnPlay_Click">Play</Button>
+                    <Button x:Name="btnPause" Margin="10" Width="50" Click="btnPause_Click">Pause</Button>
+                    <Slider x:Name="positionSlider" Width="100" Maximum="{Binding Length}" ToolTip="{Binding RelativeSource={RelativeSource self}, Path=Value}" Value="{Binding Position}" VerticalAlignment="Center" />
 
                     <!-- Volume slider. This slider allows a Volume range between 0 and 1. -->
-                    <TextBlock VerticalAlignment="Center" Margin="5"  >Volume</TextBlock>
-                    <Slider Name="volumeSlider" Orientation="Vertical" VerticalAlignment="Center" ValueChanged="ChangeMediaVolume" 
-       Minimum="0" Maximum="1" Value="0.5" Width="30" Height="60" />
+                    <TextBlock Margin="5" VerticalAlignment="Center">Volume</TextBlock>
+                    <Slider Height="60" Width="30" Maximum="1" Minimum="0" Name="volumeSlider" Orientation="Vertical" Value="0.5" ValueChanged="ChangeMediaVolume" VerticalAlignment="Center" />
 
                     <!-- Seek to slider. Ths slider allows you to jump to different parts of the media playback. -->
-                    <TextBlock Margin="5"  VerticalAlignment="Center">Seek To</TextBlock>
-                    <Slider Name="timelineSlider" Margin="5" VerticalAlignment="Center" ValueChanged="SeekToMediaPosition" Width="100"/>
-
+                    <TextBlock Margin="5" VerticalAlignment="Center">Seek To</TextBlock>
+                    <Slider Margin="5" Width="100" Name="timelineSlider" ValueChanged="SeekToMediaPosition" VerticalAlignment="Center" />
+                    <Slider Width="100" Maximum="100.00" Name="slider1" ToolTip="{Binding RelativeSource={RelativeSource self}, Path=Value}" Value="{Binding Percentage}" />
                 </StackPanel>
             </StackPanel>
 
-            <ListBox x:Name="lstSongsPlaylist" Grid.Row="3" ItemTemplate="{StaticResource SongTemplate}" />
+            <ListBox x:Name="lstSongsPlaylist" Grid.Row="3" ItemsSource="{Binding Playlist}" ItemTemplate="{StaticResource SongTemplate}" SelectedItem="{Binding SelectedSong}" SelectionChanged="lstSongsPlaylist_SelectionChanged" SelectionMode="Single" />
 
         </Grid>
     </Grid>
